@@ -631,7 +631,7 @@ render_navbar($_SESSION['full_name'], 'panelist');
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
                     <div style="background: var(--light); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);">
-                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--text-light); text-transform: uppercase;">Team Members</span>
+                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--text-light); text-transform: uppercase;">PRESENTER</span>
                         <div style="font-size: 1.75rem; font-weight: 900; color: var(--primary);"><?= count($members) ?></div>
                     </div>
                     <div style="background: var(--light); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);">

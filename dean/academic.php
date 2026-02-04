@@ -102,7 +102,7 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Academic Year");
 
                 <div style="display: flex; gap: 1rem;">
                     <button type="submit" class="btn btn-primary" style="flex: 2; height: 52px; font-weight: 700; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
-                        <?= $edit_sy ? '💾 Update Session' : '✨ Create Session' ?>
+                        <?= $edit_sy ? '💾 Update Session' : ' Create Session' ?>
                     </button>
                     <?php if($edit_sy): ?>
                         <a href="academic.php" class="btn btn-secondary" style="flex: 1; height: 52px; display: flex; align-items: center; justify-content: center; font-weight: 700; border-radius: var(--radius-md);">Cancel</a>

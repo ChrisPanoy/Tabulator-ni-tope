@@ -189,7 +189,7 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
                     <div style="margin-bottom: 2rem;">
                         <p style="font-size: 0.7rem; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                             <span style="width: 6px; height: 6px; background: var(--primary); border-radius: 1px; rotate: 45deg;"></span>
-                            Team Roster
+                            Group Member
                         </p>
                         <div style="display: flex; flex-wrap: wrap; gap: 0.625rem;">
                             <?php if(isset($members_map[$team['id']])): ?>
