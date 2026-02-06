@@ -149,7 +149,7 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
     </div>
 
     <!-- Team Matrix -->
-    <h2 style="margin-bottom: 2rem; font-size: 1.5rem; letter-spacing: -0.01em;">Active Capstone Groups</h2>
+    <h2 style="margin-bottom: 2rem; font-size: 1.5rem; letter-spacing: -0.01em;">Active Capstone Groups (Updated)</h2>
     <div class="dashboard-grid">
         <?php foreach($teams as $team): ?>
             <div class="card stat-card animate-fade-in primary-top" style="display: flex; flex-direction: column; padding: 2rem;">
@@ -211,7 +211,7 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
                         </p>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <?php 
-                            $doc_labels = ['imrad' => 'IMRAD', 'poster' => 'POSTER', 'brochure' => 'BROCHURE'];
+                            $doc_labels = ['imrad' => 'IMRAD', 'poster' => 'POSTER', 'brochure' => 'BROCHURE', 'teaser' => 'TEASER'];
                             $team_subs = $submissions_map[$team['id']] ?? [];
                             if(empty($team_subs)):
                             ?>
@@ -219,10 +219,13 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
                                     <span style="opacity: 0.5;">⏸️</span> No submissions found
                                 </div>
                             <?php else: ?>
-                                <?php foreach($doc_labels as $key => $lbl): if(isset($team_subs[$key])): ?>
-                                    <a href="../<?= htmlspecialchars($team_subs[$key]['file_path']) ?>" target="_blank" 
+                                <?php foreach($doc_labels as $key => $lbl): if(isset($team_subs[$key])): 
+                                    $link = ($key === 'teaser') ? htmlspecialchars($team_subs[$key]['file_path']) : '../' . htmlspecialchars($team_subs[$key]['file_path']);
+                                    $icon = ($key === 'teaser') ? '🎬' : '📄';
+                                ?>
+                                    <a href="<?= $link ?>" target="_blank" 
                                        style="font-size: 0.7rem; background: var(--surface); color: var(--success); padding: 6px 14px; border-radius: 50px; text-decoration: none; font-weight: 800; border: 1.5px solid var(--success); display: flex; align-items: center; gap: 0.4rem; transition: all 0.2s;">
-                                       📄 <?= $lbl ?>
+                                       <?= $icon ?> <?= $lbl ?>
                                     </a>
                                 <?php endif; endforeach; ?>
                             <?php endif; ?>

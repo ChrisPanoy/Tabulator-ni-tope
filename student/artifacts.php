@@ -69,6 +69,28 @@ if ($team) {
                 } else {
                     $error = "Please select a file to upload.";
                 }
+            } elseif ($type === 'teaser') {
+                $link = trim($_POST['teaser_link'] ?? '');
+                if (!empty($link)) {
+                    if (filter_var($link, FILTER_VALIDATE_URL)) {
+                        $stmt_check = $pdo->prepare("SELECT id FROM tab_submissions WHERE team_id = ? AND file_type = 'teaser'");
+                        $stmt_check->execute([$team['id']]);
+                        $existing = $stmt_check->fetch();
+
+                        if ($existing) {
+                            $stmt_upd = $pdo->prepare("UPDATE tab_submissions SET file_path = ?, original_name = 'System Teaser Link', uploaded_at = CURRENT_TIMESTAMP WHERE id = ?");
+                            $stmt_upd->execute([$link, $existing['id']]);
+                        } else {
+                            $stmt_ins = $pdo->prepare("INSERT INTO tab_submissions (team_id, file_type, file_path, original_name) VALUES (?, 'teaser', ?, 'System Teaser Link')");
+                            $stmt_ins->execute([$team['id'], $link]);
+                        }
+                        $message = "Teaser link updated successfully.";
+                    } else {
+                        $error = "Please provide a valid URL for the teaser.";
+                    }
+                } else {
+                    $error = "Teaser link cannot be empty.";
+                }
             }
         }
     }
@@ -117,7 +139,8 @@ render_navbar($_SESSION['full_name'], 'student', '../', 'Project Artifacts');
             $types = [
                 'imrad' => ['label' => 'IMRAD Document', 'icon' => '📄', 'desc' => 'Extended Methodology, Results, Analysis & Discussion'],
                 'poster' => ['label' => 'Research Poster', 'icon' => '🖼️', 'desc' => 'Visual presentation of your research findings'],
-                'brochure' => ['label' => 'Project Brochure', 'icon' => '📚', 'desc' => 'Marketing material for your capstone project']
+                'brochure' => ['label' => 'Project Brochure', 'icon' => '📚', 'desc' => 'Marketing material for your capstone project'],
+                'teaser' => ['label' => 'System Teaser', 'icon' => '🎬', 'desc' => 'Direct link to your system teaser video (YouTube/Drive)']
             ];
             foreach($types as $key => $info): 
                 $sub = $submissions[$key] ?? null;
@@ -161,12 +184,12 @@ render_navbar($_SESSION['full_name'], 'student', '../', 'Project Artifacts');
                 <!-- Action Buttons -->
                 <div id="action-buttons-<?= $key ?>" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
                     <?php if($sub): ?>
-                        <a href="../<?= htmlspecialchars($sub['file_path']) ?>" target="_blank" class="btn btn-secondary" style="padding: 0.625rem 1.5rem; font-size: 0.875rem; font-weight: 700;">
+                        <a href="<?= $key === 'teaser' ? htmlspecialchars($sub['file_path']) : '../' . htmlspecialchars($sub['file_path']) ?>" target="_blank" class="btn btn-secondary" style="padding: 0.625rem 1.5rem; font-size: 0.875rem; font-weight: 700;">
                              Preview
                         </a>
                     <?php endif; ?>
                     <button onclick="document.getElementById('upload-area-<?= $key ?>').style.display='block'; document.getElementById('action-buttons-<?= $key ?>').style.display='none';" class="btn btn-primary" style="padding: 0.625rem 1.5rem; font-size: 0.875rem; font-weight: 700;">
-                        <?= $sub ? ' Update File' : '📤 Upload PDF' ?>
+                        <?= $sub ? ($key === 'teaser' ? ' Update Link' : ' Update File') : ($key === 'teaser' ? '🔗 Add Link' : '📤 Upload PDF') ?>
                     </button>
                 </div>
 
@@ -176,22 +199,34 @@ render_navbar($_SESSION['full_name'], 'student', '../', 'Project Artifacts');
                         <input type="hidden" name="upload_doc" value="1">
                         <input type="hidden" name="doc_type" value="<?= $key ?>">
                         
-                        <div style="background: var(--light); padding: 1.5rem; border-radius: var(--radius-md); border: 2px dashed var(--border); margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 0.875rem; color: var(--text-main);">
-                                Select PDF File
-                            </label>
-                            <input type="file" name="pdf_file" accept=".pdf" class="form-control" required style="font-size: 0.875rem;">
-                            <p style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-light); text-align: center;">
-                                📋 Maximum file size: 10MB • Format: PDF only
-                            </p>
-                        </div>
+                        <?php if($key === 'teaser'): ?>
+                            <div style="background: var(--light); padding: 1.5rem; border-radius: var(--radius-md); border: 2px dashed var(--border); margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 0.875rem; color: var(--text-main);">
+                                    Teaser Link (URL)
+                                </label>
+                                <input type="url" name="teaser_link" class="form-control" required style="font-size: 0.875rem;" placeholder="https://youtube.com/..." value="<?= $sub ? htmlspecialchars($sub['file_path']) : '' ?>">
+                                <p style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-light); text-align: center;">
+                                    📺 Provide a link to your system demonstration or teaser video.
+                                </p>
+                            </div>
+                        <?php else: ?>
+                            <div style="background: var(--light); padding: 1.5rem; border-radius: var(--radius-md); border: 2px dashed var(--border); margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 0.875rem; color: var(--text-main);">
+                                    Select PDF File
+                                </label>
+                                <input type="file" name="pdf_file" accept=".pdf" class="form-control" required style="font-size: 0.875rem;">
+                                <p style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-light); text-align: center;">
+                                    📋 Maximum file size: 10MB • Format: PDF only
+                                </p>
+                            </div>
+                        <?php endif; ?>
                         
                         <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
                             <button type="button" onclick="document.getElementById('upload-area-<?= $key ?>').style.display='none'; document.getElementById('action-buttons-<?= $key ?>').style.display='flex';" class="btn btn-secondary" style="padding: 0.625rem 1.5rem; font-size: 0.875rem;">
                                 Cancel
                             </button>
                             <button type="submit" class="btn btn-primary" style="padding: 0.625rem 1.5rem; font-size: 0.875rem; font-weight: 700;">
-                                ✅ Submit Upload
+                                ✅ Submit <?= $key === 'teaser' ? 'Link' : 'Upload' ?>
                             </button>
                         </div>
                     </form>

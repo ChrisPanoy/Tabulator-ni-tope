@@ -397,6 +397,9 @@ render_navbar($_SESSION['full_name'], 'panelist');
                     } elseif (strpos($category_lower, 'brochure') !== false) {
                         $icon = '📂';
                         $color = '#2563eb';
+                    } elseif (strpos($category_lower, 'teaser') !== false || strpos($category_lower, 'video') !== false) {
+                        $icon = '🎬';
+                        $color = '#e11d48';
                     }
                     
                     $quick_nav_items[] = [
@@ -462,12 +465,14 @@ render_navbar($_SESSION['full_name'], 'panelist');
         $mini_docs = [
             'imrad' => ['label' => 'Manuscript', 'icon' => '📄'],
             'poster' => ['label' => 'Poster', 'icon' => '🖼️'],
-            'brochure' => ['label' => 'Brochure', 'icon' => '📂']
+            'brochure' => ['label' => 'Brochure', 'icon' => '📂'],
+            'teaser' => ['label' => 'Teaser', 'icon' => '🎬']
         ];
         foreach($mini_docs as $mtype => $minfo): 
             $msub = $submissions[$mtype] ?? null;
+            $link = $msub ? ($mtype === 'teaser' ? htmlspecialchars($msub['file_path']) : '../'.htmlspecialchars($msub['file_path'])) : '#';
         ?>
-            <a href="<?= $msub ? '../'.htmlspecialchars($msub['file_path']) : '#' ?>" 
+            <a href="<?= $link ?>" 
                target="_blank" 
                class="asset-pill <?= $msub ? '' : 'disabled' ?>"
                title="<?= $msub ? 'Open '.$minfo['label'] : $minfo['label'].' not submitted' ?>">
@@ -492,7 +497,8 @@ render_navbar($_SESSION['full_name'], 'panelist');
                     $doc_types = [
                         'imrad' => ['label' => 'Manuscripts / IMRAD', 'icon' => '📄'],
                         'poster' => ['label' => 'Research Poster', 'icon' => '🖼️'],
-                        'brochure' => ['label' => 'Project Brochure', 'icon' => '📂']
+                        'brochure' => ['label' => 'Project Brochure', 'icon' => '📂'],
+                        'teaser' => ['label' => 'System Teaser', 'icon' => '🎬']
                     ];
                     foreach($doc_types as $type => $info): 
                         $sub = $submissions[$type] ?? null;
@@ -502,7 +508,7 @@ render_navbar($_SESSION['full_name'], 'panelist');
                             <h4 style="margin: 0; font-size: 1rem; color: var(--text-main);"><?= $info['label'] ?></h4>
                             <?php if($sub): ?>
                                 <p style="margin: 0.25rem 0 1.25rem; font-size: 0.75rem; color: var(--success); font-weight: 700;">READY</p>
-                                <a href="../<?= htmlspecialchars($sub['file_path']) ?>" target="_blank" class="btn btn-secondary" style="width: 100%; border-radius: 50px; font-size: 0.8125rem;">View Document</a>
+                                <a href="<?= $type === 'teaser' ? htmlspecialchars($sub['file_path']) : '../' . htmlspecialchars($sub['file_path']) ?>" target="_blank" class="btn btn-secondary" style="width: 100%; border-radius: 50px; font-size: 0.8125rem;">View <?= $type === 'teaser' ? 'Link' : 'Document' ?></a>
                             <?php else: ?>
                                 <p style="margin: 0.25rem 0 1.25rem; font-size: 0.75rem; color: var(--danger); font-weight: 700;">MISSING</p>
                                 <button disabled class="btn btn-secondary" style="width: 100%; border-radius: 50px; opacity: 0.4;">Not Available</button>
@@ -544,9 +550,9 @@ render_navbar($_SESSION['full_name'], 'panelist');
                         if (isset($submissions['poster'])) {
                             $doc_info = ['type' => 'poster', 'label' => 'View Poster', 'icon' => '🖼️'];
                         }
-                    } elseif (strpos($category_lower, 'brochure') !== false) {
-                        if (isset($submissions['brochure'])) {
-                            $doc_info = ['type' => 'brochure', 'label' => 'View Brochure', 'icon' => '📂'];
+                    } elseif (strpos($category_lower, 'teaser') !== false || strpos($category_lower, 'video') !== false) {
+                        if (isset($submissions['teaser'])) {
+                            $doc_info = ['type' => 'teaser', 'label' => 'View Teaser', 'icon' => '🎬'];
                         }
                     }
                 ?>
@@ -556,7 +562,7 @@ render_navbar($_SESSION['full_name'], 'panelist');
                             <div style="display: flex; align-items: center; gap: 1rem;">
                                 <span style="font-size: 0.75rem; color: var(--text-light); font-weight: 600;"><?= count($criteria) ?> Criteria</span>
                                 <?php if($doc_info): ?>
-                                    <a href="../<?= htmlspecialchars($submissions[$doc_info['type']]['file_path']) ?>" 
+                                    <a href="<?= $doc_info['type'] === 'teaser' ? htmlspecialchars($submissions[$doc_info['type']]['file_path']) : '../' . htmlspecialchars($submissions[$doc_info['type']]['file_path']) ?>" 
                                        target="_blank" 
                                        class="btn btn-primary" 
                                        style="padding: 0.5rem 1.25rem; font-size: 0.75rem; border-radius: 50px; display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
