@@ -336,6 +336,82 @@ render_navbar($_SESSION['full_name'], 'panelist');
     .quick-nav-btn:active {
         transform: translateY(0);
     }
+
+    /* Summary Table Styling */
+    .summary-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 2rem;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+    }
+    .summary-table th {
+        background: var(--light);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-light);
+        border-bottom: 2px solid var(--border);
+    }
+    .summary-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9375rem;
+        color: var(--text-main);
+    }
+    .summary-table tr:last-child td {
+        border-bottom: none;
+    }
+    .summary-table tr:hover td {
+        background: var(--primary-subtle);
+    }
+    .summary-section-title {
+        text-align: left;
+        font-size: 1.125rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin: 2.5rem 0 1.25rem;
+        padding-left: 0.75rem;
+        border-left: 4px solid var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .score-badge {
+        font-weight: 900;
+        color: var(--primary);
+        background: var(--primary-subtle);
+        padding: 0.25rem 0.75rem;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+    .summary-comment {
+        font-size: 0.8125rem;
+        color: var(--text-light);
+        font-style: italic;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--border);
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 
 <div class="container" style="max-width: 1000px; margin-top: 2.5rem; padding-bottom: 8rem;">
@@ -719,14 +795,11 @@ render_navbar($_SESSION['full_name'], 'panelist');
                     Please double-check all scores. Once you click <strong>"Finalize and Lock"</strong>, you will no longer be able to modify your evaluations for this team.
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
-                    <div style="background: var(--light); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);">
-                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--text-light); text-transform: uppercase;">PRESENTER</span>
-                        <div style="font-size: 1.75rem; font-weight: 900; color: var(--primary);"><?= count($members) ?></div>
-                    </div>
-                    <div style="background: var(--light); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);">
-                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--text-light); text-transform: uppercase;">Group Criteria</span>
-                        <div style="font-size: 1.75rem; font-weight: 900; color: var(--primary);"><?= count($group_criteria) ?></div>
+                <div id="score-summary-area" style="text-align: left; margin-bottom: 3rem;">
+                    <!-- Scores will be injected here via JS -->
+                    <div style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        <div class="spinner" style="margin-bottom: 1rem;"></div>
+                        Generating score summary...
                     </div>
                 </div>
 
@@ -750,6 +823,11 @@ render_navbar($_SESSION['full_name'], 'panelist');
         // Show target step
         document.getElementById('step-' + step).classList.add('active');
         
+        // Populate summary if entering step 3
+        if (step === 3) {
+            generateScoreSummary();
+        }
+
         // Toggle persistent assets bar (show only during actual scoring step 2)
         const assetsBar = document.getElementById('persistentAssets');
         if (step === 2) {
@@ -940,6 +1018,104 @@ render_navbar($_SESSION['full_name'], 'panelist');
             }, 500);
         }
     });
+
+    function generateScoreSummary() {
+        const container = document.getElementById('score-summary-area');
+        if (!container) return;
+
+        let html = '';
+
+        // Group Scores
+        html += '<h4 class="summary-section-title"><span>👥</span> Group Criteria Scores</h4>';
+        
+        const groupSection = document.getElementById('group-evaluation');
+        if (groupSection) {
+            const categoryCards = groupSection.querySelectorAll('.category-card');
+            categoryCards.forEach(card => {
+                const categoryBadge = card.querySelector('.category-badge');
+                const categoryName = categoryBadge ? categoryBadge.textContent : 'General';
+                
+                html += `<div style="margin-bottom: 2rem;">
+                    <div style="font-weight: 800; font-size: 0.8125rem; color: var(--primary); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; background: var(--primary-subtle); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px;">
+                        ${categoryName}
+                    </div>
+                    <table class="summary-table">
+                        <tbody>`;
+                
+                card.querySelectorAll('[name^="g_score_"]').forEach(input => {
+                    const id = input.name.replace('g_score_', '');
+                    const row = input.closest('.criterion-row');
+                    const criteriaName = row ? row.querySelector('h4').textContent : 'Criteria #' + id;
+                    const comment = document.querySelector(`[name="g_comment_${id}"]`).value;
+                    
+                    html += `<tr>
+                        <td>
+                            <strong>${criteriaName}</strong>
+                            ${comment ? `<span class="summary-comment">"${comment}"</span>` : ''}
+                        </td>
+                        <td style="text-align:center; width:100px;"><span class="score-badge">${parseFloat(input.value || 0).toFixed(2)}</span></td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+            });
+        }
+
+        // Individual Scores
+        if (document.querySelectorAll('[name^="i_score_"]').length > 0) {
+            html += '<h4 class="summary-section-title"><span>🎤</span> Individual Presenter Scores</h4>';
+            
+            // Group individual scores by member
+            const memberScores = {};
+            document.querySelectorAll('[name^="i_score_"]').forEach(input => {
+                const parts = input.name.split('_');
+                const memberId = parts[2];
+                const criteriaId = parts[3];
+                
+                if (!memberScores[memberId]) memberScores[memberId] = [];
+                memberScores[memberId].push({
+                    input: input,
+                    criteriaId: criteriaId
+                });
+            });
+
+            for (const memberId in memberScores) {
+                const memberCard = document.querySelector(`#i_score_${memberId}_${memberScores[memberId][0].criteriaId}`).closest('.member-card');
+                const memberName = memberCard ? memberCard.querySelector('h3').textContent : 'Member #' + memberId;
+                
+                html += `<div style="margin-bottom: 1.5rem;">
+                    <div style="font-weight: 700; font-size: 0.9375rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="width: 24px; height: 24px; background: var(--primary); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">${memberName.charAt(0)}</div>
+                        ${memberName}
+                    </div>
+                    <table class="summary-table" style="margin-bottom: 1rem;">
+                        <tbody>`;
+                
+                memberScores[memberId].forEach(item => {
+                    const row = item.input.closest('.ind-criterion-row');
+                    const criteriaName = row ? row.querySelector('label').textContent : 'Criteria #' + item.criteriaId;
+                    const categoryLabel = row ? row.querySelector('span[style*="text-transform: uppercase"]') : null;
+                    const categoryText = categoryLabel ? categoryLabel.textContent : '';
+                    const comment = document.querySelector(`[name="i_comment_${memberId}_${item.criteriaId}"]`).value;
+                    
+                    html += `<tr>
+                        <td>
+                            <div style="display: flex; flex-direction: column;">
+                                <strong>${criteriaName}</strong>
+                                ${categoryText ? `<span style="font-size: 0.65rem; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-top: 2px;">${categoryText}</span>` : ''}
+                                ${comment ? `<span class="summary-comment">"${comment}"</span>` : ''}
+                            </div>
+                        </td>
+                        <td style="text-align:center; width:100px;"><span class="score-badge">${parseFloat(item.input.value || 0).toFixed(2)}</span></td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+            }
+        }
+
+        container.innerHTML = html;
+    }
 </script>
 
 <?php render_footer(); ?>
