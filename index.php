@@ -89,7 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="login-logo">
                 <img src="assets/img/logo.png" alt="Logo" style="width: 150%; height: 150%; object-fit: contain;">
             </div>
-            <h1 style="font-size: 2rem; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Tabulation<span style="color: var(--primary);">X</span></h1>
+            <h1 style="font-size: 2rem; margin-bottom: 0.5rem; letter-spacing: -0.02em;">
+  3rd Research Colloquium
+</h1>
             <p style="color: var(--text-light); font-weight: 500;">Secure Access Portal</p>
         </div>
 

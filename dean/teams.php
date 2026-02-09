@@ -36,6 +36,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("DELETE FROM tab_teams WHERE id = ?")->execute([$tid]);
         $message = "Team deleted.";
     }
+
+    if (isset($_POST['update_team'])) {
+        $tid = $_POST['team_id'];
+        $name = sanitize($_POST['team_name']);
+        $title = sanitize($_POST['project_title']);
+        
+        if ($name && $title) {
+            $stmt = $pdo->prepare("UPDATE tab_teams SET team_name = ?, project_title = ? WHERE id = ?");
+            if ($stmt->execute([$name, $title, $tid])) {
+                $message = "Team updated successfully!";
+            } else {
+                $error = "Failed to update team.";
+            }
+        } else {
+            $error = "Group Name and Project Title are required.";
+        }
+    }
 }
 
 $events = $pdo->query("SELECT id, title FROM tab_events ORDER BY event_date DESC")->fetchAll();
@@ -158,11 +175,14 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
                         <span style="font-size: 0.65rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.25rem;">Group Entry</span>
                         <h3 style="margin: 0; font-size: 1.5rem; letter-spacing: -0.02em; color: var(--primary-dark); line-height: 1.1;"><?= htmlspecialchars($team['team_name']) ?></h3>
                     </div>
-                    <form method="POST" onsubmit="return confirm('Permanently remove this team and all associated data?');">
-                        <input type="hidden" name="delete_team" value="1">
-                        <input type="hidden" name="team_id" value="<?= $team['id'] ?>">
-                        <button type="submit" style="background: var(--danger-subtle); border: none; color: var(--danger); cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: all 0.2s;" title="Delete Team">&times;</button>
-                    </form>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="openEditModal(<?= htmlspecialchars(json_encode($team), ENT_QUOTES) ?>)" style="background: var(--primary-subtle); border: none; color: var(--primary); cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s;" title="Edit Team">✏️</button>
+                        <form method="POST" onsubmit="return confirm('Permanently remove this team and all associated data?');">
+                            <input type="hidden" name="delete_team" value="1">
+                            <input type="hidden" name="team_id" value="<?= $team['id'] ?>">
+                            <button type="submit" style="background: var(--danger-subtle); border: none; color: var(--danger); cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: all 0.2s;" title="Delete Team">&times;</button>
+                        </form>
+                    </div>
                 </div>
 
                 <div style="margin-bottom: 2rem;">
@@ -236,5 +256,54 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
         <?php endforeach; ?>
     </div>
 </div>
+
+<!-- Edit Modal -->
+<div id="editModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1.5rem;">
+    <div class="card animate-fade-in" style="width: 100%; max-width: 500px; padding: 2.5rem; position: relative;">
+        <button onclick="closeEditModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer;">&times;</button>
+        <h3 style="margin-bottom: 2rem; font-size: 1.5rem; letter-spacing: -0.01em;">Edit Team Profile</h3>
+        
+        <form method="POST">
+            <input type="hidden" name="update_team" value="1">
+            <input type="hidden" name="team_id" id="edit_team_id">
+            
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--text-light);">Group Name</label>
+                <input type="text" name="team_name" id="edit_team_name" class="form-control" required style="height: 52px; border-radius: var(--radius-md);">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--text-light);">Project Title</label>
+                <input type="text" name="project_title" id="edit_project_title" class="form-control" required style="height: 52px; border-radius: var(--radius-md);">
+            </div>
+            
+            <div style="margin-top: 2.5rem; display: flex; gap: 1rem;">
+                <button type="button" onclick="closeEditModal()" class="btn btn-secondary" style="flex: 1; height: 50px;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 2; height: 50px;">Update Team</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditModal(team) {
+    document.getElementById('edit_team_id').value = team.id;
+    document.getElementById('edit_team_name').value = team.team_name;
+    document.getElementById('edit_project_title').value = team.project_title;
+    
+    document.getElementById('editModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('editModal');
+    if (event.target == modal) closeEditModal();
+}
+</script>
 
 <?php render_footer(); ?>
