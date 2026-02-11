@@ -41,6 +41,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="menu-icon"></span>
                 <span class="menu-text">Accounts</span>
             </a>
+            <a href="<?= $base_path ?>dean/settings.php" class="menu-item <?= $current_page == 'settings.php' ? 'active' : '' ?>">
+                <span class="menu-icon"></span>
+                <span class="menu-text">System Settings</span>
+            </a>
         <?php elseif($role === 'panelist'): ?>
             <div class="menu-section">Main</div>
             <a href="<?= $base_path ?>panelist/dashboard.php" class="menu-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>">

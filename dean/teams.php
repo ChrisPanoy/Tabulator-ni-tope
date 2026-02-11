@@ -41,10 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tid = $_POST['team_id'];
         $name = sanitize($_POST['team_name']);
         $title = sanitize($_POST['project_title']);
+        $schedule = !empty($_POST['schedule_time']) ? $_POST['schedule_time'] : null;
+        $event_id = !empty($_POST['event_id']) ? $_POST['event_id'] : null;
+        $desc = sanitize($_POST['description']);
         
         if ($name && $title) {
-            $stmt = $pdo->prepare("UPDATE tab_teams SET team_name = ?, project_title = ? WHERE id = ?");
-            if ($stmt->execute([$name, $title, $tid])) {
+            $stmt = $pdo->prepare("UPDATE tab_teams SET team_name = ?, project_title = ?, schedule_time = ?, event_id = ?, description = ? WHERE id = ?");
+            if ($stmt->execute([$name, $title, $schedule, $event_id, $desc, $tid])) {
                 $message = "Team updated successfully!";
             } else {
                 $error = "Failed to update team.";
@@ -213,7 +216,11 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
                         <label style="font-size: 0.65rem; font-weight: 800; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Project Title</label>
                         <input type="text" name="project_title" form="form-edit-<?= $team['id'] ?>" 
                                value="<?= htmlspecialchars($team['project_title']) ?>" class="form-control" 
-                               style="height: 48px; font-weight: 600;">
+                               style="height: 48px; font-weight: 600; margin-bottom: 0.5rem;">
+                        
+                        <label style="font-size: 0.65rem; font-weight: 800; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Project Abstract</label>
+                        <textarea name="description" form="form-edit-<?= $team['id'] ?>" class="form-control" 
+                                  style="font-size: 0.8rem; border-radius: 8px;"><?= htmlspecialchars($team['description'] ?: '') ?></textarea>
                     </div>
                     <div style="display: grid; gap: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.8125rem; color: var(--text-light); border: 1px solid var(--border); padding: 0.6rem 1rem; border-radius: 12px; background: var(--light);">
@@ -225,9 +232,24 @@ render_navbar($_SESSION['full_name'], 'dean', '../', "Capstone Groups");
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.8125rem; color: var(--text-light); border: 1px solid var(--border); padding: 0.6rem 1rem; border-radius: 12px;">
                             <span style="font-size: 1.1rem;">📅</span>
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 0.6rem; font-weight: 800; text-transform: uppercase; opacity: 0.7;">Schedule</span>
-                                <span style="font-weight: 600; color: var(--text-main);"><?= $team['schedule_time'] ? date('M j, g:i A', strtotime($team['schedule_time'])) : 'Schedule Not Set' ?></span>
+                            <div style="display: flex; flex-direction: column; width: 100%;">
+                                <span style="font-size: 0.6rem; font-weight: 800; text-transform: uppercase; opacity: 0.7;">Schedule & Session</span>
+                                <div id="view-schedule-<?= $team['id'] ?>">
+                                    <span style="font-weight: 600; color: var(--text-main);"><?= $team['schedule_time'] ? date('M j, g:i A', strtotime($team['schedule_time'])) : 'No Schedule' ?></span>
+                                    <span style="font-size: 0.75rem; opacity: 0.8;">• <?= htmlspecialchars($team['event_title'] ?: 'No Session') ?></span>
+                                </div>
+                                
+                                <div id="edit-schedule-<?= $team['id'] ?>" style="display: none; margin-top: 4px;">
+                                    <input type="datetime-local" name="schedule_time" form="form-edit-<?= $team['id'] ?>" 
+                                           value="<?= $team['schedule_time'] ? date('Y-m-d\TH:i', strtotime($team['schedule_time'])) : '' ?>" 
+                                           class="form-control" style="height: 32px; padding: 0 5px; font-size: 0.75rem; margin-bottom: 5px;">
+                                    <select name="event_id" form="form-edit-<?= $team['id'] ?>" class="form-control" style="height: 32px; font-size: 0.75rem; padding: 0 5px;">
+                                        <option value="">-- No Session --</option>
+                                        <?php foreach($events as $evt): ?>
+                                            <option value="<?= $evt['id'] ?>" <?= ($team['event_id'] == $evt['id']) ? 'selected' : '' ?>><?= htmlspecialchars($evt['title']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -305,6 +327,10 @@ function toggleEdit(id, show) {
     // Title
     document.getElementById('view-title-' + id).style.display = displayStyle;
     document.getElementById('edit-title-container-' + id).style.display = editStyle;
+    
+    // Schedule
+    document.getElementById('view-schedule-' + id).style.display = displayStyle;
+    document.getElementById('edit-schedule-' + id).style.display = editStyle;
 }
 </script>
 

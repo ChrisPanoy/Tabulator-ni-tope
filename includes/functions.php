@@ -100,4 +100,10 @@ function get_current_event($pdo) {
     }
     return $event;
 }
+function get_system_title($pdo) {
+    $stmt = $pdo->prepare("SELECT setting_value FROM tab_settings WHERE setting_key = 'system_title' LIMIT 1");
+    $stmt->execute();
+    $result = $stmt->fetch();
+    return $result ? $result['setting_value'] : 'Tabulation System';
+}
 ?>
